@@ -468,6 +468,21 @@ export default class StockWatchTable extends Component {
 
         return gainLossA - gainLossB;
       });
+    } else if (key == 'invested') {
+        data.sort((a, b) => {
+            let {quantity: quantityA, avgCost: avgCostA} = a;
+            let {quantity: quantityB, avgCost: avgCostB} = b;
+            let investedA, investedB;
+
+            if ([quantityA, avgCostA].includes(null) && ![quantityB, avgCostB].includes(null)) return 1;
+            else if ([quantityB, avgCostB].includes(null) && ![quantityA, avgCostA].includes(null)) return -1;
+            else if ([quantityA, avgCostA].includes(null) && [quantityB, avgCostB].includes(null)) { return 0; }
+
+            investedA = avgCostA * quantityA;
+            investedB = avgCostB * quantityB;
+
+            return investedA - investedB;
+        });
     } else if (key == 'symbol') {
       data.sort((a, b) => {
         if (!a[key] && b[key]) return 1;
@@ -513,6 +528,21 @@ export default class StockWatchTable extends Component {
             else if ([currPriceA, quantityA, avgCostA].includes(null) && [currPriceB, quantityB, avgCostB].includes(null)) { return 0; }
     
             return gainLossB - gainLossA;
+        });
+    } else if (key == 'invested') {
+        data.sort((a, b) => {
+            let {quantity: quantityA, avgCost: avgCostA} = a;
+            let {quantity: quantityB, avgCost: avgCostB} = b;
+            let investedA, investedB;
+
+            if ([quantityA, avgCostA].includes(null) && ![quantityB, avgCostB].includes(null)) return 1;
+            else if ([quantityB, avgCostB].includes(null) && ![quantityA, avgCostA].includes(null)) return -1;
+            else if ([quantityA, avgCostA].includes(null) && [quantityB, avgCostB].includes(null)) { return 0; }
+
+            investedA = avgCostA * quantityA;
+            investedB = avgCostB * quantityB;
+
+            return investedB - investedA;
         });
     } else if (key == 'symbol') {
       data.sort((a, b) => {
