@@ -379,6 +379,7 @@ export default class StockWatchTable extends Component {
       data: TEST_stock_data,
       editingStockIdx: null,
       refreshBtnIdx: null,
+      tableKey: 1 // when changed, entire table is forced to re-render (should only be done after sorting)
     };
 
     this.autoRefreshTimer = null;
@@ -448,54 +449,100 @@ export default class StockWatchTable extends Component {
 
   sortAsc = (key) => {
     console.log('sortAsc', key);
-    let { data } = this.state;
+    let { data, tableKey } = this.state;
     let sortedData = this.state;
 
     // gainLoss is a calculated column, so needs special handling
     if (key == 'gainLoss') {
-      //TODO:
-    } else if (key == 'symbol') {
       data.sort((a, b) => {
         // console.log(a[key], "vs.", b[key], " ===> ", a[key] - b[key]);
+        let {currPrice: currPriceA, quantity: quantityA, avgCost: avgCostA} = a;
+        let {currPrice: currPriceB, quantity: quantityB, avgCost: avgCostB} = b;
+
+        if ([currPriceA, quantityA, avgCostA].includes(null) && ![currPriceB, quantityB, avgCostB].includes(null)) return 1;
+        else if ([currPriceB, quantityB, avgCostB].includes(null) && ![currPriceA, quantityA, avgCostA].includes(null)) return -1;
+        else if ([currPriceA, quantityA, avgCostA].includes(null) && [currPriceB, quantityB, avgCostB].includes(null)) { return 0; }
+
+        let gainLossA = currPriceA * quantityA - avgCostA * quantityA;
+        let gainLossB = currPriceB * quantityB - avgCostB * quantityB;
+
+        return gainLossA - gainLossB;
+      });
+    } else if (key == 'symbol') {
+      data.sort((a, b) => {
+        if (!a[key] && b[key]) return 1;
+        else if (!b[key] && a[key]) return -1;
+        else if (!a[key] && !b[key]) { return 0; }
+
         if (a[key] == b[key]) return 0;
         else if (a[key] >= b[key]) return 1;
         else return -1;
       });
     } else {
       data.sort((a, b) => {
+          console.log("a: ", a)
+        if (a[key] == null && b[key] != null) return 1;
+        else if (b[key] == null && a[key] != null) return -1;
+        else if (a[key] == null && b[key] == null) { return 0; }
+
         return a[key] - b[key];
       });
     }
 
-    this.persistAndSetState(data);
+    this.persistAndSetState(data, {tableKey: tableKey+1});
   };
 
   sortDesc = (key) => {
     console.log('sortDesc', key);
-    let { data } = this.state;
+    let { data, tableKey } = this.state;
     let sortedData = this.state;
 
     // gainLoss is a calculated column, so needs special handling
     if (key == 'gainLoss') {
+        data.sort((a, b) => {
+            // console.log(a[key], "vs.", b[key], " ===> ", a[key] - b[key]);
+            let {currPrice: currPriceA, quantity: quantityA, avgCost: avgCostA} = a;
+            let {currPrice: currPriceB, quantity: quantityB, avgCost: avgCostB} = b;
+    
+    
+            let gainLossA = currPriceA * quantityA - avgCostA * quantityA;
+            let gainLossB = currPriceB * quantityB - avgCostB * quantityB;
+    
+            if ([currPriceA, quantityA, avgCostA].includes(null) && ![currPriceB, quantityB, avgCostB].includes(null)) return 1;
+            else if ([currPriceB, quantityB, avgCostB].includes(null) && ![currPriceA, quantityA, avgCostA].includes(null)) return -1;
+            else if ([currPriceA, quantityA, avgCostA].includes(null) && [currPriceB, quantityB, avgCostB].includes(null)) { return 0; }
+    
+            return gainLossB - gainLossA;
+        });
     } else if (key == 'symbol') {
       data.sort((a, b) => {
-        // console.log(a[key], "vs.", b[key], " ===> ", a[key] - b[key]);
+
+        console.log(a[key], "vs.", b[key]);
+        console.log("    == ", a[key] == b[key]);
+        console.log("    >= ", a[key] >= b[key]);
+        console.log("    <= ", a[key] <= b[key]);
+
+        if (!a[key] && b[key]) return 1;
+        else if (!b[key] && a[key]) return -1;
+        else if (!a[key] && !b[key]) { return 0; }
+
         if (a[key] == b[key]) return 0;
         else if (a[key] >= b[key]) return -1;
         else return 1;
       });
     } else {
       data.sort((a, b) => {
+
+        if (a[key] == null && b[key] != null) return 1;
+        else if (b[key] == null && a[key] != null) return -1;
+        else if (a[key] == null && b[key] == null) { return 0; }
+
         return b[key] - a[key];
       });
     }
 
-    this.persistAndSetState(data);
+    this.persistAndSetState(data, {tableKey: tableKey+1});
   };
-
-  //   onDeleteClicked = (elm) => {
-
-  //   }
 
   renderColumnHeader = (columnInfo) => {
     return (
@@ -544,10 +591,12 @@ export default class StockWatchTable extends Component {
     );
   };
 
-  persistAndSetState = (stockData, editingStockIdx) => {
+  persistAndSetState = (stockData, extraStateInfo) => {
     saveAppData(stockData);
 
-    this.setState({ data: stockData, editingStockIdx: editingStockIdx });
+    let { editingStockIdx = null, tableKey = this.state.tableKey } = extraStateInfo;
+
+    this.setState({ data: stockData, editingStockIdx: editingStockIdx, tableKey: tableKey });
   };
 
   onAddClicked = () => {
@@ -806,7 +855,7 @@ export default class StockWatchTable extends Component {
     // console.log(this.state);
     // this.state.data.forEach((d) => console.log(d));
 
-    let { editingStockIdx, refreshBtnIdx } = this.state;
+    let { editingStockIdx, refreshBtnIdx, tableKey } = this.state;
     let columnWidths = [135, 135, 145, 145, 145, 175, 175];
     return (
       <div style={{ alignSelf: 'center' }}>
@@ -826,6 +875,7 @@ export default class StockWatchTable extends Component {
                 selectionModes={[]}
                 renderMode={RenderMode.NONE}
                 columnWidths={columnWidths}
+                key={tableKey + ""}
               >
                 {this.state.columns.map((col) => this.renderColumn(col))}
               </Table>
