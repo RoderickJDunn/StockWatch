@@ -263,6 +263,7 @@
     "react-router-dom": "^5.2.0",
     "regenerator-runtime": "^0.13.5",
     "source-map-support": "^0.5.19",
+    "update-electron-app": "^2.0.1",
     "yahoo-finance": "^0.3.7"
   },
   "devEngines": {

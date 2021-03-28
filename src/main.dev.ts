@@ -22,7 +22,7 @@ Store.initRenderer();
 
 // const configDir =  app.getPath('userData');
 // console.log("configDir", configDir);
-
+// require('update-electron-app')()
 
 export default class AppUpdater {
   constructor() {
