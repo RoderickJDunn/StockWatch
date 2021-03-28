@@ -1,0 +1,78 @@
+@import "~@blueprintjs/core/lib/scss/variables";
+
+.stockHeaderCell {
+    text-align: center !important;
+    align-content: center !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    background: $blue5;
+    font-weight: bold;
+    color: $light-gray5;
+}
+
+.stockTableCell {
+    box-shadow: none !important;
+    text-align: center;
+    display: flex !important;
+    flex: 1;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    color: $dark-gray5;
+    overflow: hidden;
+}
+
+.stockNameCell div {
+    flex: 1;
+}
+
+.stockTableCell div div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+div.bp3-table-editable-text {
+    display: flex !important;
+    flex: 1 !important;
+}
+
+.tableFooterWrap {
+    height: 35px;
+    background: $dark-gray5;
+    color: $light-gray3;
+}
+
+.tableFooterCell {
+    display: inline-flex;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    vertical-align: center;
+    font-weight: bold;
+    vertical-align: top;
+}
+
+.stockHeaderCell div {
+    background: none !important;
+}
+
+.refreshColumnContainer {
+    display: flex;
+    position: absolute;
+    flex-direction: column;
+    left: -40px;
+    top: 0;
+    bottom: 0;
+    flex: 1;
+}
+
+.refreshColumnContainer div button {
+    visibility: hidden;
+}
+
+.refreshColumnContainer div:hover button {
+    visibility: visible;
+}
