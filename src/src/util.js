@@ -1,4 +1,5 @@
 import moment from "moment";
+import {DAYS_OF_WEEK} from "./constants";
 
 const format = 'hh:mm';
 var prefix = moment().format('YYYY-MM-DD') + ' ';
@@ -27,11 +28,14 @@ export const FormatPercentAmount = (percentValue) => {
 
 export const IsMarketDefinitelyClosed = () => {
 
-    let currHour = moment().hours();
-    console.log('currHour', currHour);
+    let now = moment();
+    let currHour = now.hours()
+    let dayOfWeek = now.day()
 
     if (currHour > 18 || currHour < 8) {
         return true; // market is closed (we're between hours 6pm and 8am)
+    } else if (dayOfWeek == DAYS_OF_WEEK.SATURDAY || dayOfWeek == DAYS_OF_WEEK.SUNDAY) {
+        return true; // market is closed on weekend
     }
 
     return false;

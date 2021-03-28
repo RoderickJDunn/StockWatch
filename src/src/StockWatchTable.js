@@ -385,23 +385,25 @@ export default class StockWatchTable extends Component {
   }
 
   // TODO:
-  // Add way to enter Market code for each stock
-  // TAB to next EditableCell in row
-  // Autofocus StockName input after adding a new stock
   // "Suggest" component to search stocks seems to be buggy when multiple searches are sent
+  // GAIN/LOSS Column sorting
 
   componentDidMount() {
     this.refreshAllStockPrices();
-    this.autoRefreshTimer = setInterval(this.refreshAllStockPrices, 120000);
+    this.autoRefreshTimer = setInterval(this.onAutoRefreshTmoExpired, 120000);
   }
 
-  refreshAllStockPrices = async () => {
-
+  onAutoRefreshTmoExpired = () => {
     // if we're well-outside of market hours skip auto-refresh
     if (IsMarketDefinitelyClosed()) {
         console.log("Market is closed. Skipping auto-refresh");
         return;
     }
+
+    this.refreshAllStockPrices();
+  }
+
+  refreshAllStockPrices = async () => {
 
     let { data } = this.state;
 
