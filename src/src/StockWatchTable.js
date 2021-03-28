@@ -621,7 +621,7 @@ export default class StockWatchTable extends Component {
     );
   };
 
-  persistAndSetState = (stockData, extraStateInfo) => {
+  persistAndSetState = (stockData, extraStateInfo = {}) => {
     saveAppData(stockData);
 
     let { editingStockIdx = null, tableKey = this.state.tableKey } = extraStateInfo;
