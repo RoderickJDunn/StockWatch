@@ -106,8 +106,9 @@ export default class EditStockOverlay extends Component {
         isOpen={this.props.isOpen}
         onClose={this.props.onEditingCancelled}
         canEscapeKeyClose={true}
+        className={styles.overlayContainer}
+        portalClassName={styles.overlayBackdrop}
       >
-        <div className={styles.overlayContainer}>
           <div className={styles.editStockDialogue}>
             <h2>Edit Stock</h2>
             <Divider />
@@ -246,7 +247,6 @@ export default class EditStockOverlay extends Component {
               </div>
             </div>
           </div>
-        </div>
       </Overlay>
     );
   }
