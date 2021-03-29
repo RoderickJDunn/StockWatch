@@ -22,14 +22,13 @@ import { Column, Table, Cell } from "@blueprintjs/table";
 
 import StockWatchTable from "./StockWatchTable";
 
-const cellRenderer = (rowIndex) => <Cell>{`$${(rowIndex * 10).toFixed(2)}`}</Cell>;
-
 export default class StockWatchScreen extends Component {
 
-    watchTableRef = null;
 
     constructor() {
         super();
+        
+        this.watchTableRef = null;
 
         this.state = {
             infoShowing: false,
@@ -45,7 +44,7 @@ export default class StockWatchScreen extends Component {
 
     render() {
         return (
-            <div className={"screen"} style={{display: "flex", flex: 1, alignContent: "center", justifyContent: "center"}}>
+            <div className="screen" style={{display: "flex", flex: 1, alignContent: "center", justifyContent: "center"}}>
                 <Button icon="info-sign" minimal style={{position: "absolute", left: 20, top: 20}} onClick={() => {
                     this.setState({infoShowing: true});
                 }}/>
