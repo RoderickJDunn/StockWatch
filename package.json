@@ -1,6 +1,6 @@
 {
   "name": "stock-watch",
-  "productName": "ElectronReact",
+  "productName": "Stock Watch",
   "description": "Stock Watcher",
   "scripts": {
     "build": "concurrently \"yarn build:main\" \"yarn build:renderer\"",
@@ -30,8 +30,8 @@
     ]
   },
   "build": {
-    "productName": "ElectronReact",
-    "appId": "org.erb.ElectronReact",
+    "productName": "Stock Watch",
+    "appId": "org.erb.stockwatch",
     "files": [
       "dist/",
       "node_modules/",
