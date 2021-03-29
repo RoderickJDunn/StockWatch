@@ -889,7 +889,7 @@ export default class StockWatchTable extends Component {
     let columnWidths = [135, 135, 145, 145, 145, 175, 175];
     return (
       <div style={{ alignSelf: 'center' }}>
-        {this.state.data.length && (
+        {this.state.data.length > 0 && (
           <div style={{ position: 'relative' }}>
             <RefreshButtonColumn
               count={this.state.data.length}
