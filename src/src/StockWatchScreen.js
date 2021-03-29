@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import { ipcRenderer } from 'electron';
 import React, { Component } from 'react'
 import {
     InputGroup,
@@ -32,11 +32,13 @@ export default class StockWatchScreen extends Component {
         super();
 
         this.state = {
-            infoShowing: false
+            infoShowing: false,
+            appVersion: "Unknown Version",
         };
 
-        console.log("Version ", app.getVersion());
-        
+        ipcRenderer.once('app-version', (event, args) => {
+            this.setState({appVersion: args});
+        })
     }
 
 
@@ -53,7 +55,7 @@ export default class StockWatchScreen extends Component {
                 <StockWatchTable ref={elm => this.watchTableRef = elm}/>
                 <Dialog isOpen={this.state.infoShowing} title={"Stock Watch"}>
                     <div className={Classes.DIALOG_BODY}>
-                        <p>Version {"TODO: unknown version"}</p>
+                        <p>Version: {this.state.appVersion}</p>
                     </div>
                     <div className={Classes.DIALOG_FOOTER}>
                         <div className={Classes.DIALOG_FOOTER_ACTIONS}>
