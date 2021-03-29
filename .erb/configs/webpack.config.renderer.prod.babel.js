@@ -49,6 +49,7 @@ export default merge(baseConfig, {
             options: {
               // `./dist` can't be inerhited for publicPath for styles. Otherwise generated paths will be ./dist/dist
               publicPath: './',
+              esModule: false
             },
           },
           'css-loader',
