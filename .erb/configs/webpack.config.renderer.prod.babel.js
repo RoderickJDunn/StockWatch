@@ -41,19 +41,45 @@ export default merge(baseConfig, {
 
   module: {
     rules: [
+        {
+        test: /\.global\.(scss|sass)$/,
+        use: [
+            {
+            loader: 'style-loader',
+            },
+            {
+            loader: 'css-loader',
+            options: {
+                sourceMap: true,
+            },
+            },
+            {
+            loader: 'sass-loader',
+            },
+        ],
+        },
       {
-        test: /.s?css$/,
+        test: /^((?!\.global).)*\.(scss|sass)$/,
         use: [
           {
-            loader: MiniCssExtractPlugin.loader,
+            loader: 'style-loader',
+          },
+          {
+            loader: '@teamsupercell/typings-for-css-modules-loader',
+          },
+          {
+            loader: 'css-loader',
             options: {
-              // `./dist` can't be inerhited for publicPath for styles. Otherwise generated paths will be ./dist/dist
-              publicPath: './',
-              esModule: false
+              modules: {
+                localIdentName: '[name]__[local]__[hash:base64:5]',
+              },
+              sourceMap: true,
+              importLoaders: 1,
             },
           },
-          'css-loader',
-          'sass-loader'
+          {
+            loader: 'sass-loader',
+          },
         ],
       },
       // WOFF Font
