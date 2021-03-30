@@ -36,6 +36,7 @@ export default class StockWatchScreen extends Component {
         };
 
         ipcRenderer.once('app-version', (event, args) => {
+            console.log("Got app version event: ", event, args);
             this.setState({appVersion: args});
         })
     }

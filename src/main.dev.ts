@@ -16,7 +16,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 
-const appVersion = process.env.npm_package_version;
+const appVersion = app.getVersion();
 
 
 const Store = require('electron-store');
@@ -104,10 +104,11 @@ const createWindow = async () => {
       mainWindow.focus();
     }
 
-    mainWindow.webContents.on('dom-ready', () => {
+    // NOTE: debug in prod by uncommenting this line
+    // mainWindow.webContents.openDevTools();
+
         console.log(`Trying to send app version to renderer: ${appVersion}`)
         mainWindow && mainWindow.webContents.send('app-version', appVersion)
-    })
   });
 
   mainWindow.on('closed', () => {

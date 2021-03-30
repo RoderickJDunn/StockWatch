@@ -48,6 +48,7 @@ import { INDICES_SUFFIX } from './constants';
 
 function loadStocksData() {
   let rawData = store.get('stocksData');
+//   console.log('rawData', rawData);
   let stockRecords;
 
   console.log('loading stocks data');
