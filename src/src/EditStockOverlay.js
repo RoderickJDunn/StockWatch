@@ -122,7 +122,7 @@ export default class EditStockOverlay extends Component {
                 <Suggest
                   //  createNewItemFromQuery={maybeCreateNewItemFromQuery}
                   //  createNewItemRenderer={maybeCreateNewItemRenderer}
-                  inputProps={{ placeholder: 'Apple...' }}
+                  inputProps={{ placeholder: 'Apple...', autoFocus: true }}
                   inputValueRenderer={this.renderInputValue}
                   itemRenderer={(item, { handleClick, modifiers, query }) => (
                     <MenuItem
