@@ -16,7 +16,8 @@ import {
     MenuItem,
     Position,
     Dialog,
-    Classes
+    Classes,
+    Toast
   } from '@blueprintjs/core';
 import { Column, Table, Cell } from "@blueprintjs/table";
 
@@ -33,11 +34,17 @@ export default class StockWatchScreen extends Component {
         this.state = {
             infoShowing: false,
             appVersion: "Unknown Version",
+            // toastText: 
         };
 
         ipcRenderer.once('app-version', (event, args) => {
             console.log("Got app version event: ", event, args);
             this.setState({appVersion: args});
+        })
+
+        ipcRenderer.on('message', (event, args) => {
+            console.log("Got message: ", event, args);
+            // this.setState({appVersion: args});
         })
     }
 

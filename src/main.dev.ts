@@ -23,19 +23,56 @@ const Store = require('electron-store');
 
 Store.initRenderer();
 
-// const configDir =  app.getPath('userData');
-// console.log("configDir", configDir);
-// require('update-electron-app')()
+let mainWindow: BrowserWindow | null = null;
+
+
+function sendStatusToWindow(text = "") {
+    // log.info(text);
+    console.log("sending msg to renderer: ", text);
+    mainWindow && mainWindow.webContents.send('message', text);
+  }
+
 
 export default class AppUpdater {
   constructor() {
+    sendStatusToWindow("Init AppUpdater");
+    this.setupListeners();
+
     log.transports.file.level = 'info';
     autoUpdater.logger = log;
     autoUpdater.checkForUpdatesAndNotify();
   }
-}
 
-let mainWindow: BrowserWindow | null = null;
+  setupListeners() {
+    autoUpdater.on('checking-for-update', () => {
+        sendStatusToWindow('Checking for update...');
+    });
+    autoUpdater.on('update-available', (info) => {
+        sendStatusToWindow('Update available.');
+    });
+    autoUpdater.on('update-not-available', (info) => {
+        sendStatusToWindow('Update not available.');
+    });
+    autoUpdater.on('error', (err) => {
+        sendStatusToWindow('Error in auto-updater. ' + err);
+    });
+    autoUpdater.on('download-progress', (progressObj) => {
+        let log_message = 'Download speed: ' + progressObj.bytesPerSecond;
+        log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+        log_message =
+            log_message +
+            ' (' +
+            progressObj.transferred +
+            '/' +
+            progressObj.total +
+            ')';
+        sendStatusToWindow(log_message);
+    });
+    autoUpdater.on('update-downloaded', (info) => {
+        sendStatusToWindow('Update downloaded');
+    });
+  }
+}
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');

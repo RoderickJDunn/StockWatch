@@ -43,7 +43,8 @@
     "afterSign": ".erb/scripts/Notarize.js",
     "mac": {
       "target": [
-        "dmg"
+        "dmg",
+        "zip"
       ],
       "type": "distribution",
       "hardenedRuntime": true,
@@ -91,20 +92,8 @@
   },
   "author": {
     "name": "Roderick Dunn",
-    "url": "https://github.com/RoderickJDunn/StockWatch"
+    "url": "https://github.com/RoderickJDunn"
   },
-  "contributors": [
-    {
-      "name": "Amila Welihinda",
-      "email": "amilajack@gmail.com",
-      "url": "https://github.com/amilajack"
-    },
-    {
-      "name": "John Tran",
-      "email": "jptran318@gmail.com",
-      "url": "https://github.com/jooohhn"
-    }
-  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/RoderickJDunn/StockWatch/issues"
@@ -263,7 +252,6 @@
     "react-router-dom": "^5.2.0",
     "regenerator-runtime": "^0.13.5",
     "source-map-support": "^0.5.19",
-    "update-electron-app": "^2.0.1",
     "yahoo-finance": "^0.3.7"
   },
   "devEngines": {
@@ -297,6 +285,5 @@
     "baseBranches": [
       "next"
     ]
-  },
-  "version": "0.1.0"
+  }
 }
