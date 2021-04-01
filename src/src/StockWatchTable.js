@@ -352,16 +352,16 @@ export default class StockWatchTable extends Component {
           key: 'avgCost',
         },
         {
-          name: 'Invested',
-          cellRenderer: renderInvestedCell,
-          keyProps: ['avgCost', 'quantity'],
-          key: 'invested',
-        },
-        {
           name: 'Current Price',
           cellRenderer: renderCurrPriceCell,
           keyProps: ['currPrice'],
           key: 'currPrice',
+        },
+        {
+            name: 'Invested',
+            cellRenderer: renderInvestedCell,
+            keyProps: ['avgCost', 'quantity'],
+            key: 'invested',
         },
         {
           name: 'Gain/Loss',
@@ -851,7 +851,7 @@ export default class StockWatchTable extends Component {
 
         content = `${isNegative ? '-' : ''}${total}`;
       }
-    } else if (idx == 3) {
+    } else if (idx == 4) {
       total = this.calcTotalInvested(data);
 
       if (isNaN(total)) {
