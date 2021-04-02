@@ -11,6 +11,7 @@
 @import "~@blueprintjs/datetime/lib/css/blueprint-datetime.css";
 @import "~@blueprintjs/select/lib/css/blueprint-select.css";
 @import "~@fontsource/assistant/index.css";
+@import "~@blueprintjs/core/lib/scss/variables";
 
 * { padding:0; margin:0;}
 
@@ -25,6 +26,29 @@
         #030303 51.77%,
         #000300 129.35%
     );
+}
+
+div.bp3-table-menu {
+    background: $blue5;
+    transform: scaleX(1.1);
+}
+
+div.bp3-table-row-headers {
+    transform: translateX(1px); // Shift rowHeader column right slightly to cover seperator line (class "..virtual" somthing)
+}
+
+div.bp3-table-row-name {
+    display: none;
+}
+
+div.bp3-table-menu, div.bp3-table-row-headers, div.bp3-table-header {
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    border-width: 0px;
+}
+
+div.bp3-table-body-virtual-client {
+    background: green;
 }
 
 // #content, html, body, #root, .App, h1 {

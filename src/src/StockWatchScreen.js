@@ -56,9 +56,6 @@ export default class StockWatchScreen extends Component {
                 <Button icon="info-sign" minimal style={{position: "absolute", left: 20, top: 20}} onClick={() => {
                     this.setState({infoShowing: true});
                 }}/>
-                <Button icon="refresh" style={{position: "absolute", right: 20, top: 20}} onClick={() => {
-                    this.watchTableRef && this.watchTableRef.refreshAllStockPrices();
-                }}/>
                 <StockWatchTable ref={elm => this.watchTableRef = elm}/>
                 <Dialog isOpen={this.state.infoShowing} title={"Stock Watch"}>
                     <div className={Classes.DIALOG_BODY}>

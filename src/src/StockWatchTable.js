@@ -16,6 +16,7 @@ import {
   ColumnHeaderCell,
   RegionCardinality,
   RenderMode,
+  RowHeaderCell,
 } from '@blueprintjs/table';
 import { Popover2, Popover2InteractionKind } from '@blueprintjs/popover2';
 import { DateInput } from '@blueprintjs/datetime';
@@ -26,14 +27,27 @@ const Store = require('electron-store');
 
 const store = new Store();
 
-import { FormatDollarAmount, FormatPercentAmount, IsMarketDefinitelyClosed } from './util';
+import {
+  FormatDollarAmount,
+  FormatPercentAmount,
+  IsMarketDefinitelyClosed,
+} from './util';
 import { fetchQuote, searchSymbol } from './api';
 import styles from './StockTable.scss';
 import EditStockOverlay from './EditStockOverlay';
 import StockRecord from './StockRecord';
 import { INDICES_SUFFIX } from './constants';
+import ImportOverlay from './ImportOverlay';
 
 // let TEST_stock_data = [
+//   new StockRecord('TO', 'CHE.UN', 900, 7.01),
+//   new StockRecord('TO', 'CHR', 1200, 4.68),
+//   new StockRecord('TO', 'FOOD', 600, 9.829),
+//   new StockRecord('CN', 'HARV', 1200, 3.907),
+//   new StockRecord('TO', 'LABS', 9000, 0.551),
+//   new StockRecord('TO', 'MEG'),
+//   new StockRecord('TO', 'AC'),
+//   new StockRecord('TO', 'VLNS'),
 //   new StockRecord('TO', 'CHE.UN', 900, 7.01),
 //   new StockRecord('TO', 'CHR', 1200, 4.68),
 //   new StockRecord('TO', 'FOOD', 600, 9.829),
@@ -48,7 +62,7 @@ import { INDICES_SUFFIX } from './constants';
 
 function loadStocksData() {
   let rawData = store.get('stocksData');
-//   console.log('rawData', rawData);
+  //   console.log('rawData', rawData);
   let stockRecords;
 
   console.log('loading stocks data');
@@ -75,13 +89,13 @@ function saveAppData(data) {
   store.set('stocksData', JSON.stringify(data));
 }
 
-let TEST_stock_data = loadStocksData();
+let loadedStockData = loadStocksData();
 // saveAppData(TEST_stock_data);
 // let TEST_stock_data = [];
 
 const getCellBackground = (rowIndex) => {
   if (rowIndex % 2 === 1) {
-    return '#DFEFFCAA';
+    return 'rgb(234, 246, 255)';
   } else {
     return 'white';
   }
@@ -94,7 +108,7 @@ const renderStockNameCell = (getCellData, actions, rowIndex) => {
   const cellStyleBg = { backgroundColor: 'lightgray' };
   let intent = Intent.NONE;
 
-//   console.log('Render name cell');
+  //   console.log('Render name cell');
 
   if (error != null) {
     console.log('found error!');
@@ -295,7 +309,7 @@ const RefreshButtonColumn = (props) => {
     <div className={styles.refreshColumnContainer}>
       <div style={{ height: 45 }} />
       {rows.map((i, idx) => (
-        <div style={{ width: 80 }} key={idx+""}>
+        <div style={{ width: 80 }} key={idx + ''}>
           <Button
             icon={'refresh'}
             minimal={true}
@@ -358,10 +372,10 @@ export default class StockWatchTable extends Component {
           key: 'currPrice',
         },
         {
-            name: 'Invested',
-            cellRenderer: renderInvestedCell,
-            keyProps: ['avgCost', 'quantity'],
-            key: 'invested',
+          name: 'Invested',
+          cellRenderer: renderInvestedCell,
+          keyProps: ['avgCost', 'quantity'],
+          key: 'invested',
         },
         {
           name: 'Gain/Loss',
@@ -377,10 +391,12 @@ export default class StockWatchTable extends Component {
           key: 'purchaseDate',
         },
       ],
-      data: TEST_stock_data,
+      data: loadedStockData,
       editingStockIdx: null,
+      importIsShowing: false,
       refreshBtnIdx: null,
-      tableKey: 1 // when changed, entire table is forced to re-render (should only be done after sorting)
+      isReorderEnabled: false,
+      tableKey: 1, // when changed, entire table is forced to re-render (should only be done after sorting)
     };
 
     this.autoRefreshTimer = null;
@@ -398,15 +414,14 @@ export default class StockWatchTable extends Component {
   onAutoRefreshTmoExpired = () => {
     // if we're well-outside of market hours skip auto-refresh
     if (IsMarketDefinitelyClosed()) {
-        console.log("Market is closed. Skipping auto-refresh");
-        return;
+      console.log('Market is closed. Skipping auto-refresh');
+      return;
     }
 
     this.refreshAllStockPrices();
-  }
+  };
 
   refreshAllStockPrices = async () => {
-
     let { data } = this.state;
 
     for (let i = 0; i < data.length; i++) {
@@ -457,12 +472,33 @@ export default class StockWatchTable extends Component {
     if (key == 'gainLoss') {
       data.sort((a, b) => {
         // console.log(a[key], "vs.", b[key], " ===> ", a[key] - b[key]);
-        let {currPrice: currPriceA, quantity: quantityA, avgCost: avgCostA} = a;
-        let {currPrice: currPriceB, quantity: quantityB, avgCost: avgCostB} = b;
+        let {
+          currPrice: currPriceA,
+          quantity: quantityA,
+          avgCost: avgCostA,
+        } = a;
+        let {
+          currPrice: currPriceB,
+          quantity: quantityB,
+          avgCost: avgCostB,
+        } = b;
 
-        if ([currPriceA, quantityA, avgCostA].includes(null) && ![currPriceB, quantityB, avgCostB].includes(null)) return 1;
-        else if ([currPriceB, quantityB, avgCostB].includes(null) && ![currPriceA, quantityA, avgCostA].includes(null)) return -1;
-        else if ([currPriceA, quantityA, avgCostA].includes(null) && [currPriceB, quantityB, avgCostB].includes(null)) { return 0; }
+        if (
+          [currPriceA, quantityA, avgCostA].includes(null) &&
+          ![currPriceB, quantityB, avgCostB].includes(null)
+        )
+          return 1;
+        else if (
+          [currPriceB, quantityB, avgCostB].includes(null) &&
+          ![currPriceA, quantityA, avgCostA].includes(null)
+        )
+          return -1;
+        else if (
+          [currPriceA, quantityA, avgCostA].includes(null) &&
+          [currPriceB, quantityB, avgCostB].includes(null)
+        ) {
+          return 0;
+        }
 
         let gainLossA = currPriceA * quantityA - avgCostA * quantityA;
         let gainLossB = currPriceB * quantityB - avgCostB * quantityB;
@@ -470,25 +506,40 @@ export default class StockWatchTable extends Component {
         return gainLossA - gainLossB;
       });
     } else if (key == 'invested') {
-        data.sort((a, b) => {
-            let {quantity: quantityA, avgCost: avgCostA} = a;
-            let {quantity: quantityB, avgCost: avgCostB} = b;
-            let investedA, investedB;
+      data.sort((a, b) => {
+        let { quantity: quantityA, avgCost: avgCostA } = a;
+        let { quantity: quantityB, avgCost: avgCostB } = b;
+        let investedA, investedB;
 
-            if ([quantityA, avgCostA].includes(null) && ![quantityB, avgCostB].includes(null)) return 1;
-            else if ([quantityB, avgCostB].includes(null) && ![quantityA, avgCostA].includes(null)) return -1;
-            else if ([quantityA, avgCostA].includes(null) && [quantityB, avgCostB].includes(null)) { return 0; }
+        if (
+          [quantityA, avgCostA].includes(null) &&
+          ![quantityB, avgCostB].includes(null)
+        )
+          return 1;
+        else if (
+          [quantityB, avgCostB].includes(null) &&
+          ![quantityA, avgCostA].includes(null)
+        )
+          return -1;
+        else if (
+          [quantityA, avgCostA].includes(null) &&
+          [quantityB, avgCostB].includes(null)
+        ) {
+          return 0;
+        }
 
-            investedA = avgCostA * quantityA;
-            investedB = avgCostB * quantityB;
+        investedA = avgCostA * quantityA;
+        investedB = avgCostB * quantityB;
 
-            return investedA - investedB;
-        });
+        return investedA - investedB;
+      });
     } else if (key == 'symbol') {
       data.sort((a, b) => {
         if (!a[key] && b[key]) return 1;
         else if (!b[key] && a[key]) return -1;
-        else if (!a[key] && !b[key]) { return 0; }
+        else if (!a[key] && !b[key]) {
+          return 0;
+        }
 
         if (a[key] == b[key]) return 0;
         else if (a[key] >= b[key]) return 1;
@@ -496,16 +547,18 @@ export default class StockWatchTable extends Component {
       });
     } else {
       data.sort((a, b) => {
-          console.log("a: ", a)
+        console.log('a: ', a);
         if (a[key] == null && b[key] != null) return 1;
         else if (b[key] == null && a[key] != null) return -1;
-        else if (a[key] == null && b[key] == null) { return 0; }
+        else if (a[key] == null && b[key] == null) {
+          return 0;
+        }
 
         return a[key] - b[key];
       });
     }
 
-    this.persistAndSetState(data, {tableKey: tableKey+1});
+    this.persistAndSetState(data, { tableKey: tableKey + 1 });
   };
 
   sortDesc = (key) => {
@@ -515,47 +568,81 @@ export default class StockWatchTable extends Component {
 
     // gainLoss is a calculated column, so needs special handling
     if (key == 'gainLoss') {
-        data.sort((a, b) => {
-            // console.log(a[key], "vs.", b[key], " ===> ", a[key] - b[key]);
-            let {currPrice: currPriceA, quantity: quantityA, avgCost: avgCostA} = a;
-            let {currPrice: currPriceB, quantity: quantityB, avgCost: avgCostB} = b;
-    
-    
-            let gainLossA = currPriceA * quantityA - avgCostA * quantityA;
-            let gainLossB = currPriceB * quantityB - avgCostB * quantityB;
-    
-            if ([currPriceA, quantityA, avgCostA].includes(null) && ![currPriceB, quantityB, avgCostB].includes(null)) return 1;
-            else if ([currPriceB, quantityB, avgCostB].includes(null) && ![currPriceA, quantityA, avgCostA].includes(null)) return -1;
-            else if ([currPriceA, quantityA, avgCostA].includes(null) && [currPriceB, quantityB, avgCostB].includes(null)) { return 0; }
-    
-            return gainLossB - gainLossA;
-        });
+      data.sort((a, b) => {
+        // console.log(a[key], "vs.", b[key], " ===> ", a[key] - b[key]);
+        let {
+          currPrice: currPriceA,
+          quantity: quantityA,
+          avgCost: avgCostA,
+        } = a;
+        let {
+          currPrice: currPriceB,
+          quantity: quantityB,
+          avgCost: avgCostB,
+        } = b;
+
+        let gainLossA = currPriceA * quantityA - avgCostA * quantityA;
+        let gainLossB = currPriceB * quantityB - avgCostB * quantityB;
+
+        if (
+          [currPriceA, quantityA, avgCostA].includes(null) &&
+          ![currPriceB, quantityB, avgCostB].includes(null)
+        )
+          return 1;
+        else if (
+          [currPriceB, quantityB, avgCostB].includes(null) &&
+          ![currPriceA, quantityA, avgCostA].includes(null)
+        )
+          return -1;
+        else if (
+          [currPriceA, quantityA, avgCostA].includes(null) &&
+          [currPriceB, quantityB, avgCostB].includes(null)
+        ) {
+          return 0;
+        }
+
+        return gainLossB - gainLossA;
+      });
     } else if (key == 'invested') {
-        data.sort((a, b) => {
-            let {quantity: quantityA, avgCost: avgCostA} = a;
-            let {quantity: quantityB, avgCost: avgCostB} = b;
-            let investedA, investedB;
+      data.sort((a, b) => {
+        let { quantity: quantityA, avgCost: avgCostA } = a;
+        let { quantity: quantityB, avgCost: avgCostB } = b;
+        let investedA, investedB;
 
-            if ([quantityA, avgCostA].includes(null) && ![quantityB, avgCostB].includes(null)) return 1;
-            else if ([quantityB, avgCostB].includes(null) && ![quantityA, avgCostA].includes(null)) return -1;
-            else if ([quantityA, avgCostA].includes(null) && [quantityB, avgCostB].includes(null)) { return 0; }
+        if (
+          [quantityA, avgCostA].includes(null) &&
+          ![quantityB, avgCostB].includes(null)
+        )
+          return 1;
+        else if (
+          [quantityB, avgCostB].includes(null) &&
+          ![quantityA, avgCostA].includes(null)
+        )
+          return -1;
+        else if (
+          [quantityA, avgCostA].includes(null) &&
+          [quantityB, avgCostB].includes(null)
+        ) {
+          return 0;
+        }
 
-            investedA = avgCostA * quantityA;
-            investedB = avgCostB * quantityB;
+        investedA = avgCostA * quantityA;
+        investedB = avgCostB * quantityB;
 
-            return investedB - investedA;
-        });
+        return investedB - investedA;
+      });
     } else if (key == 'symbol') {
       data.sort((a, b) => {
-
-        console.log(a[key], "vs.", b[key]);
-        console.log("    == ", a[key] == b[key]);
-        console.log("    >= ", a[key] >= b[key]);
-        console.log("    <= ", a[key] <= b[key]);
+        console.log(a[key], 'vs.', b[key]);
+        console.log('    == ', a[key] == b[key]);
+        console.log('    >= ', a[key] >= b[key]);
+        console.log('    <= ', a[key] <= b[key]);
 
         if (!a[key] && b[key]) return 1;
         else if (!b[key] && a[key]) return -1;
-        else if (!a[key] && !b[key]) { return 0; }
+        else if (!a[key] && !b[key]) {
+          return 0;
+        }
 
         if (a[key] == b[key]) return 0;
         else if (a[key] >= b[key]) return -1;
@@ -563,16 +650,17 @@ export default class StockWatchTable extends Component {
       });
     } else {
       data.sort((a, b) => {
-
         if (a[key] == null && b[key] != null) return 1;
         else if (b[key] == null && a[key] != null) return -1;
-        else if (a[key] == null && b[key] == null) { return 0; }
+        else if (a[key] == null && b[key] == null) {
+          return 0;
+        }
 
         return b[key] - a[key];
       });
     }
 
-    this.persistAndSetState(data, {tableKey: tableKey+1});
+    this.persistAndSetState(data, { tableKey: tableKey + 1 });
   };
 
   renderColumnHeader = (columnInfo) => {
@@ -625,9 +713,16 @@ export default class StockWatchTable extends Component {
   persistAndSetState = (stockData, extraStateInfo = {}) => {
     saveAppData(stockData);
 
-    let { editingStockIdx = null, tableKey = this.state.tableKey } = extraStateInfo;
+    let {
+      editingStockIdx = null,
+      tableKey = this.state.tableKey,
+    } = extraStateInfo;
 
-    this.setState({ data: stockData, editingStockIdx: editingStockIdx, tableKey: tableKey });
+    this.setState({
+      data: stockData,
+      editingStockIdx: editingStockIdx,
+      tableKey: tableKey,
+    });
   };
 
   onAddClicked = () => {
@@ -643,7 +738,7 @@ export default class StockWatchTable extends Component {
     if (rowIdx >= this.state.data.length) return;
 
     this.refreshStock(this.state.data[rowIdx], rowIdx);
-  }
+  };
 
   onClickStockName = (currName, rowIdx) => {
     this.setState({ editingStockIdx: rowIdx });
@@ -823,6 +918,34 @@ export default class StockWatchTable extends Component {
     return total;
   };
 
+  onRowsReordered = (oldIndex, newIndex, length) => {
+    let { data, tableKey } = this.state;
+
+    // clone stocks data
+    let updated = data.map((a) => Object.assign(StockRecord.emptyRecord(), a));
+
+    updated.splice(newIndex, 0, updated.splice(oldIndex, 1)[0]);
+
+    this.persistAndSetState(updated, { tableKey: tableKey + 1 });
+  };
+
+  renderRowHeaderCell = (rowIdx) => {
+    return (
+      <RowHeaderCell
+        style={{
+          background: getCellBackground(rowIdx),
+          width: 40,
+          display: "flex",
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Icon icon="drag-handle-horizontal"/>
+      </RowHeaderCell>
+    );
+  };
+
   renderFooterCell = (width, idx) => {
     // console.log('renderFooterCell', width, idx);
     let content = ' ';
@@ -886,36 +1009,68 @@ export default class StockWatchTable extends Component {
     // console.log(this.state);
     // this.state.data.forEach((d) => console.log(d));
 
-    let { editingStockIdx, refreshBtnIdx, tableKey } = this.state;
+    let {
+      editingStockIdx,
+      refreshBtnIdx,
+      tableKey,
+      isReorderEnabled,
+      importIsShowing,
+    } = this.state;
     let columnWidths = [135, 135, 145, 145, 145, 175, 175];
     return (
       <div style={{ alignSelf: 'center' }}>
         {this.state.data.length > 0 && (
-          <div style={{ position: 'relative' }}>
-            <RefreshButtonColumn
-              count={this.state.data.length}
-              visibleIdx={refreshBtnIdx}
-              onClickRefreshStock={this.onClickRefreshStock}
-            />
-            <div style={{ borderRadius: 15, overflow: 'hidden' }}>
-              <Table
-                numRows={this.state.data.length}
-                style={{ boxShadow: 'none', background: 'white' }}
-                enableRowHeader={false}
-                defaultRowHeight={35}
-                selectionModes={[]}
-                renderMode={RenderMode.NONE}
-                columnWidths={columnWidths}
-                key={tableKey + ""}
-              >
-                {this.state.columns.map((col) => this.renderColumn(col))}
-              </Table>
-              {this.renderTableFooter(columnWidths)}
-            </div>
-          </div>
+          <>
+              <div style={{display: "flex",  justifyContent: "flex-end"}}>
+                <Button icon="refresh" onClick={() => {
+                    this.refreshAllStockPrices();
+                }}/>
+                <Button 
+                    style={{ marginLeft: 20 }}
+                    icon={"move"}
+                    intent={isReorderEnabled ? Intent.PRIMARY : Intent.NONE}
+                    onClick={() => this.setState({ isReorderEnabled: !isReorderEnabled })}
+                />
+                <Button
+                    style={{ marginLeft: 20 }}
+                    icon="import"
+                    onClick={() => this.setState({ importIsShowing: true })}
+                />
+                <Button 
+                    style={{ marginLeft: 20 }}
+                    text={'Add New Stock'} icon="add" onClick={this.onAddClicked} />
+              </div>
+              <br />
+              <div style={{ position: 'relative' }}>
+                <RefreshButtonColumn
+                  count={this.state.data.length}
+                  visibleIdx={refreshBtnIdx}
+                  onClickRefreshStock={this.onClickRefreshStock}
+                />
+                <div style={{ borderRadius: 15, overflow: 'hidden' }}>
+                  <Table
+                    numRows={this.state.data.length}
+                    style={{
+                      boxShadow: 'none',
+                      background: 'white',
+                    }}
+                    defaultRowHeight={35}
+                    renderMode={RenderMode.NONE}
+                    columnWidths={columnWidths}
+                    key={tableKey + ''}
+                    enableRowHeader={isReorderEnabled}
+                    enableRowReordering={isReorderEnabled}
+                    selectionModes={isReorderEnabled ? [RegionCardinality.FULL_ROWS] : []}
+                    onRowsReordered={this.onRowsReordered}
+                    rowHeaderCellRenderer={this.renderRowHeaderCell}
+                  >
+                    {this.state.columns.map((col) => this.renderColumn(col))}
+                  </Table>
+                  {this.renderTableFooter(columnWidths)}
+                </div>
+              </div>
+          </>
         )}
-        <br />
-        <Button text={'Add New Stock'} icon="add" onClick={this.onAddClicked} />
         <EditStockOverlay
           key={editingStockIdx + ''} // pass key to create new comp instance when key changes
           stock={
@@ -928,6 +1083,24 @@ export default class StockWatchTable extends Component {
           rowIdx={editingStockIdx}
           onEditingComplete={this.onEditingComplete}
           onDeleted={this.onDeleted}
+        />
+        <ImportOverlay
+          isOpen={importIsShowing}
+          onPressClose={() => this.setState({importIsShowing: false})}
+          onNewStocksAdded={(newStocks) => {
+            let { data } = this.state;
+
+            // clone stocks data
+            let updated = data.map((a) =>
+              Object.assign(StockRecord.emptyRecord(), a)
+            );
+
+            updated.push(...newStocks);
+
+            this.setState({ data: updated, importIsShowing: false}, () => {
+                this.refreshAllStockPrices();
+            });
+          }}
         />
       </div>
     );
