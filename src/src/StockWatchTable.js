@@ -38,6 +38,7 @@ import EditStockOverlay from './EditStockOverlay';
 import StockRecord from './StockRecord';
 import { INDICES_SUFFIX } from './constants';
 import ImportOverlay from './ImportOverlay';
+import LastUpdatedView from "./LastUpdatedView";
 
 // let TEST_stock_data = [
 //   new StockRecord('TO', 'CHE.UN', 900, 7.01),
@@ -397,6 +398,7 @@ export default class StockWatchTable extends Component {
       refreshBtnIdx: null,
       isReorderEnabled: false,
       tableKey: 1, // when changed, entire table is forced to re-render (should only be done after sorting)
+      lastUpdatedTs: null // used as key for LastUpdatedView. Its set whenever we refresh all stocks, triggering a new instance of the LastUpdatedView to be created.
     };
 
     this.autoRefreshTimer = null;
@@ -422,7 +424,10 @@ export default class StockWatchTable extends Component {
   };
 
   refreshAllStockPrices = async () => {
-    let { data } = this.state;
+    let { data, lastUpdatedTs } = this.state;
+
+    // if we successfully received latest price for ANY stocks in watchlist, set this flag
+    let anyPricesReceived = false;
 
     for (let i = 0; i < data.length; i++) {
       const stock = data[i];
@@ -441,6 +446,7 @@ export default class StockWatchTable extends Component {
           if (resp && resp.price) {
             data[i].currPrice = resp.price.regularMarketPrice;
             data[i].lastUpdated = new Date();
+            anyPricesReceived = true;
           }
         } catch (e) {
           console.log(e.message);
@@ -457,6 +463,13 @@ export default class StockWatchTable extends Component {
         this.setState({ data });
       }
     }
+
+    if (anyPricesReceived == true) {
+        // at least one price was successfully recv'd, update lastUpdated timestamp, so that LastUpdatedView is re-constructed with new key
+        lastUpdatedTs = moment().toISOString();
+    }
+
+    this.setState({lastUpdatedTs: lastUpdatedTs});
   };
 
   getCellData = (rowIdx, columnKey) => {
@@ -1015,6 +1028,7 @@ export default class StockWatchTable extends Component {
       tableKey,
       isReorderEnabled,
       importIsShowing,
+      lastUpdatedTs,
     } = this.state;
     let columnWidths = [135, 135, 145, 145, 145, 175, 175];
     return (
@@ -1068,6 +1082,7 @@ export default class StockWatchTable extends Component {
                   </Table>
                   {this.renderTableFooter(columnWidths)}
                 </div>
+                {lastUpdatedTs && <LastUpdatedView key={lastUpdatedTs}/>}
               </div>
           </>
         )}
