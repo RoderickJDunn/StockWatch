@@ -20,7 +20,7 @@ export class LastUpdatedView extends PureComponent {
     }
 
     componentDidMount() {
-        this.updatedTsTimer = setInterval(this.updateLastRefreshedText, 1000);
+        this.updatedTsTimer = setInterval(this.updateLastRefreshedText, 60000);
     }
 
     updateLastRefreshedText = () => {
@@ -29,10 +29,8 @@ export class LastUpdatedView extends PureComponent {
 
         let timeAgo = moment().subtract(lastUpdatedCpy);
 
-        // console.
-
         this.setState({timeAgoString: moment.duration(timeAgo).format("d [days] h [hrs] m [min] s [seconds]", {
-            largest: 2
+            largest: 1
         }) + " ago"});
     }
 
